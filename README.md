@@ -10,4 +10,4 @@ Python script that solves equations using the __infix__ to __postfix__ algorithm
 2. Navigate to where you want to clone the repository into: ```cd path/to/repository```
 3. Clone the repository via https: ```git clone https://github.com/joelcrampton/equation-solver.git```
 4. Navigate into the repository: ```cd equation-solver```
-5. Run ```/usr/local/bin/python3 /path/to/repository/equation-solver/app.py``` to launch the script
+5. Run ```/usr/local/bin/python3 /path/to/repository/equation-solver/app.py``` to launch the script (mac only)
