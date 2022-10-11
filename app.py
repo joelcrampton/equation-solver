@@ -202,10 +202,14 @@ class Postfix:
           stack.append(a * b)
         elif symbol == "/":
           stack.append(a / b)
-    return stack[0]
+    answer = stack[0]
+    if type(answer) == float: # Cast whole number float to int
+      if answer.is_integer():
+        answer = int(answer)
+    return answer
 
   def __str__(self):
-    return ' '.join(map(str, self.symbols)) # Have to map all symbols to strings before joining
+    return " ".join(map(str, self.symbols)) # Have to map all symbols to strings before joining
 
 # Running the script
 printTitle("Equation Solver", 20)
