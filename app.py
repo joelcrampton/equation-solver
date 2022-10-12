@@ -1,11 +1,12 @@
 # Pseudo code: infix-to-postfix.pdf
-# Works for the operators: "+", "-", "*" and "/"
+# Works for the operators: "+", "-", "*", "/" and "^"
 
 precedence = {
   "+": 1,
   "-": 1,
   "*": 2,
-  "/": 2
+  "/": 2,
+  "^": 3
 }
 
 def printTitle(text, padding):
@@ -175,6 +176,8 @@ class Postfix:
           stack.append(a * b)
         elif symbol == "/":
           stack.append(a / b)
+        elif symbol == "^":
+          stack.append(a ** b)
     answer = stack[0]
     if type(answer) == float: # Cast whole number float to int
       if answer.is_integer():
@@ -188,7 +191,7 @@ class Postfix:
 printTitle("Equation Solver", 20)
 solve = True
 while solve:
-  equation = input("Enter an equation to solve: ")
+  equation = input("Enter an equation: ")
   infix = Infix(equation)
   postfix = Postfix(infix)
   print(infix.__str__() + " = " + str(postfix.evaluate()))
