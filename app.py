@@ -169,22 +169,22 @@ class Infix:
     Returns:
       bool: True if valid, False otherwise.
     """
-    
+
     prev = None
     if isinstance(self.symbols[0], Operator): # Operator cannot be first
       return False
     for symbol in self.symbols:
       if isinstance(prev, Operand):
-        if(isinstance(symbol, Operand)):
+        if isinstance(symbol, Operand):
           return False
       elif isinstance(prev, Operator):
-        if(isinstance(symbol, Operator, CloseBracket)):
+        if isinstance(symbol, (Operator, CloseBracket)):
           return False
       elif isinstance(prev, OpenBracket):
-        if(isinstance(symbol, Operator, CloseBracket)):
+        if isinstance(symbol, (Operator, CloseBracket)):
           return False
       elif isinstance(prev, CloseBracket):
-        if(isinstance(symbol, Operand, OpenBracket)):
+        if isinstance(symbol, (Operand, OpenBracket)):
           return False
       prev = symbol
     return self.hasClosedBrackets() # Brackets must be closed correctly
