@@ -12,16 +12,12 @@ def printTitle(text, padding):
   """
   Prints an ASCII title
   
-  Parameters
-  ----------
-  text : string
-      The text for the title
-  padding : int
-      The width of padding either side of the text
+  Parameters:
+    text (str): The text for the title
+    padding (int): The width of padding either side of the text
   
-  Returns
-  ----------
-  string : The ASCII title
+  Returns:
+    string: The ASCII title
   """
 
   text = text.strip() # Remove whitespace
@@ -29,22 +25,19 @@ def printTitle(text, padding):
   middle = " " + text + " " # Add whitespace around text
   middle = "#" * padding + middle + "#" * padding # Add padding of "#" either side of text
   length = len(middle) # Get length of one line
-  top = "#" * length + '\n' # Top line of "#"
-  bottom = '\n' + "#" * length # Bottom line of "#"
+  top = "#" * length + "\n" # Top line of "#"
+  bottom = "\n" + "#" * length # Bottom line of "#"
   print(top + middle + bottom)
 
 def isOperand(symbol):
   """
   Determine if the given symbol is an operand
   
-  Parameters
-  ----------
-  symbol : any
-      A symbol
+  Parameters:
+    symbol (any): A symbol
   
-  Returns
-  ----------
-  bool : True if the symbol is an operand, False otherwise.
+  Returns:
+    bool: True if the symbol is an operand, False otherwise.
   """
 
   return type(symbol) == float or type(symbol) == int
@@ -53,25 +46,18 @@ class Infix:
   """
   A class used to represent an equation in Infix notation
   
-  Attributes
-  ----------
-  equation : string
-      The equation string
-  symbols : list
-      The equation symbols ordered in Infix notation
+  Attributes:
+    equation (str): The equation string
+    symbols (list): The equation symbols ordered in Infix notation
 
-  Methods
-  -------
-  split()
-      Splits the equation string into a list of symbols ordered in Infix notation
+  Methods:
+    split(): Splits the equation string into a list of symbols ordered in Infix notation
   """
 
   def __init__(self, equation):
     """
-    Parameters
-    ----------
-    equation : str
-        The equation string
+    Parameters:
+      equation (str): The equation string
     """
 
     self.equation = equation.replace(" ", "")
@@ -81,9 +67,8 @@ class Infix:
     """
     Splits the equation string into a list of symbols ordered in Infix notation
     
-    Returns
-    ----------
-    list : The list of symbols ordered in Infix notation
+    Returns:
+      list: The list of symbols ordered in Infix notation
     """
 
     output = []
@@ -115,26 +100,18 @@ class Postfix:
   """
   A class used to represent an equation in Postfix notation
   
-  Attributes
-  ----------
-  symbols : list
-      The equation symbols ordered in Postfix notation
+  Attributes:
+    symbols (list): The equation symbols ordered in Postfix notation
 
-  Methods
-  -------
-  convert(infix)
-      Converts an Infix object into a list of symbols ordered in Postfix notation
-
-  evaluate()
-      Evaluates the equation
+  Methods:
+    convert(infix): Converts an Infix object into a list of symbols ordered in Postfix notation
+    evaluate(): Evaluates the equation
   """
 
   def __init__(self, infix):
     """
-    Parameters
-    ----------
-    infix : Infix
-        An Infix object
+    Parameters:
+      infix (Infix): An Infix object
     """
 
     self.symbols = self.convert(infix)
@@ -143,14 +120,11 @@ class Postfix:
     """
     Converts an Infix object into a list of symbols ordered in Postfix notation
     
-    Parameters
-    ----------
-    infix : Infix
-        An Infix object
+    Parameters:
+      infix (Infix): An Infix object
 
-    Returns
-    ----------
-    list : The list of symbols ordered in Postfix notation
+    Returns:
+      list: The list of symbols ordered in Postfix notation
     """
 
     stack = []
@@ -182,9 +156,8 @@ class Postfix:
     """
     Evaluates the equation
 
-    Returns
-    ----------
-    int/float : The answer to the equation
+    Returns:
+      int/float: The answer to the equation
     """
 
     stack = []
@@ -218,12 +191,12 @@ while solve:
   equation = input("Enter an equation to solve: ")
   infix = Infix(equation)
   postfix = Postfix(infix)
-  print(infix.__str__() + ' = ' + str(postfix.evaluate()))
+  print(infix.__str__() + " = " + str(postfix.evaluate()))
   answer = input("\nWould you like to solve another equation? (y/n) ").lower()
-  while answer != 'y' and answer != 'n':
+  while answer != "y" and answer != "n":
     print("Please answer with 'y' or 'n'")
     answer = input("\nWould you like to solve another equation? (y/n) ").lower()
   solve = answer == "y"
   if solve:
-    print('')
+    print("")
 print("Goodbye")
