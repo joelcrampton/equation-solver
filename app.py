@@ -1,6 +1,5 @@
 # Pseudo code: infix-to-postfix.pdf
 
-brackets = ["(", ")"]
 operators = {"+": 1, "-": 1, "*": 2, "/": 2, "^": 3}
 
 def formatNumber(number):
@@ -10,7 +9,7 @@ def formatNumber(number):
   return number
 
 def isBracket(symbol):
-  return brackets.count(symbol) > 0
+  return symbol == "(" or symbol == ")"
 
 def isNumber(symbol):
   return isinstance(symbol, (int, float))
