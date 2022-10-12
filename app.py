@@ -160,23 +160,34 @@ class Infix:
 
   def isValid(self):
     """
-    Determines if the list of symbols is valid Infix notation
+    Determines if the list of symbols is valid Infix notation as below:
+    - Operand must be followed by an Operator or a Bracket. E.g. 2+, 2(, 2)
+    - Operator must be followed by an Operand or an OpenBracket. Cannot be first. E.g. +2, +(
+    - OpenBracket must be followed by an Operand or an OpenBracket. E.g. (2, ((
+    - CloseBracket must be followed by an Operator or a CloseBracket. E.g. )+, ))
     
     Returns:
       bool: True if valid, False otherwise.
     """
-
-    # VALID ORDERING
-    # Operand must be followed by an Operator or a Bracket, e.g. 2+, 2(, 2)
-    # Operator must be followed by an Operand or an OpenBracket, e.g. +2, +(
-    # OpenBracket must be followed by an Operand or an OpenBracket, e.g. (2, ((
-    # CloseBracket must be followed by an Operator or a CloseBracket, e.g. )+, ))
+    
     prev = None
+    if isinstance(self.symbols[0], Operator): # Operator cannot be first
+      return False
     for symbol in self.symbols:
-      if isinstance(symbol, type(prev)) and isinstance(symbol, (Operand, Operator)): # Invalid if two Operands or Operators in a row
-        return False
+      if isinstance(prev, Operand):
+        if(isinstance(symbol, Operand)):
+          return False
+      elif isinstance(prev, Operator):
+        if(isinstance(symbol, Operator, CloseBracket)):
+          return False
+      elif isinstance(prev, OpenBracket):
+        if(isinstance(symbol, Operator, CloseBracket)):
+          return False
+      elif isinstance(prev, CloseBracket):
+        if(isinstance(symbol, Operand, OpenBracket)):
+          return False
       prev = symbol
-    return self.hasClosedBrackets()
+    return self.hasClosedBrackets() # Brackets must be closed correctly
 
   def hasClosedBrackets(self):
     """
