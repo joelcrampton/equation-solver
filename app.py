@@ -273,7 +273,7 @@ def ask():
       equation = input("Enter an equation: ")
       infix = Infix(equation)
       postfix = Postfix(infix)
-      print(infix.__str__() + " = " + str(postfix.evaluate()))
+      print(str(infix) + " = " + str(postfix.evaluate()))
       break
     except Exception as e:
       print(e)
