@@ -1,8 +1,251 @@
 # Pseudo code: infix-to-postfix.pdf
-# Works for the operators: "+", "-", "*", "/" and "^"
 
-from ast import Sub
-from multiprocessing.sharedctypes import Value
+brackets = ["(", ")"]
+operators = {"+": 1, "-": 1, "*": 2, "/": 2, "^": 3}
+
+def formatNumber(number):
+  if isinstance(number, float):
+    if number.is_integer():
+      number = int(number)
+  return number
+
+def isBracket(symbol):
+  return brackets.count(symbol) > 0
+
+def isNumber(symbol):
+  return isinstance(symbol, (int, float))
+
+def isOperator(symbol):
+  return symbol in operators
+
+class Infix:
+  """
+  A class used to represent an equation in Infix notation
+  
+  Attributes:
+    equation (str): The equation string
+    symbols (list): The equation symbols ordered in Infix notation
+
+  Methods:
+    split(): Splits the equation string into a list of symbols ordered in Infix notation
+    check(): Check that the list of symbols is valid Infix notation
+    checkBrackets(): Check that all brackets in the list of symbols have been closed appropriately
+  """
+
+  def __init__(self, equation):
+    """
+    Parameters:
+      equation (str): The equation string
+    
+    Raises:
+      Exception: If equation is invalid
+    """
+
+    self.equation = equation.replace(" ", "")
+    try:
+      self.symbols = self.split() # Split into symbols
+      self.check() # Check for invalid equation
+    except Exception as e:
+      raise Exception(e)
+      
+  def split(self):
+    """
+    Splits the equation string into a list of symbols ordered in Infix notation
+    
+    Returns:
+      list: The list of symbols ordered in Infix notation
+
+    Raises:
+      Exception: If there is an invalid symbol in the equation
+    """
+
+    output = []
+    i = 0
+    while i < len(self.equation):
+      char = self.equation[i]
+      if char.isdigit(): # Number
+        value = char
+        while True:
+          if i == len(self.equation) - 1: # Break loop if last symbol
+            break
+          next = self.equation[i + 1]
+          if next.isdigit() == False and next != ".": # Break loop if next symbol is not a digit or "."
+            break
+          i += 1
+          value += next
+        value = int(value) if value.isdigit() else float(value) # Cast to int/float
+        output.append(value)
+        # Add "*" between number and open bracket
+        if i + 1 < len(self.equation):
+          if self.equation[i + 1] == "(":
+            output.append("*")
+      elif isBracket(char) or isOperator(char):
+        output.append(char)
+      else:
+        raise Exception("Invalid symbol in equation: '" + char + "' at position " + str(i))
+      i += 1
+    return output
+
+  def check(self):
+    """
+    Check that the list of symbols is valid Infix notation as below:
+    - Number must be followed by an operator or a bracket. E.g. 2+, 2(, 2)
+    - Operator must be followed by a number or an open bracket. Cannot be first. E.g. +2, +(
+    - Open bracket must be followed by a number or an open bracket. E.g. (2, ((
+    - Close bracket must be followed by an operator or a close bracket. E.g. )+, ))
+    
+    Raises:
+      Exception: If equation is invalid
+    """
+
+    prev = None
+    if isOperator(self.symbols[0]):
+      raise Exception("Invalid equation. Operator symbol cannot be first: '" + str(self.symbols[0]) + "' at position 0")
+    for i in range(len(self.symbols)):
+      symbol = self.symbols[i]
+      if isNumber(prev):
+        if isNumber(symbol):
+          raise Exception("Invalid equation. Number cannot be followed by another number: '" + str(symbol) + "' at position " + str(i))
+      elif isOperator(prev):
+        if isOperator(symbol):
+          raise Exception("Invalid equation. Operator cannot be followed by another operator: '" + str(symbol) + "' at position " + str(i))
+        elif symbol == ")":
+          raise Exception("Invalid equation. Operator cannot be followed by a close bracket: '" + str(symbol) + "' at position " + str(i))
+      elif prev == "(":
+        if isOperator(symbol):
+          raise Exception("Invalid equation. Open bracket cannot be followed by an operator: '" + str(symbol) + "' at position " + str(i))
+        elif symbol == ")":
+          raise Exception("Invalid equation. Open bracket cannot be followed by a close bracket: '" + str(symbol) + "' at position " + str(i))
+      elif prev == ")":
+        if isNumber(symbol):
+          raise Exception("Invalid equation. Close bracket cannot be followed by a number: '" + str(symbol) + "' at position " + str(i))
+        elif symbol == "(":
+          raise Exception("Invalid equation. Close bracket cannot be followed by an open bracket: '" + str(symbol) + "' at position " + str(i))
+      prev = symbol
+    # Check brackets
+    try:
+      self.checkBrackets()
+    except Exception as e:
+      raise Exception("Invalid equation. " + str(e))
+
+  def checkBrackets(self):
+    """
+    Check that all brackets in the list of symbols have been closed appropriately
+    
+    Raises:
+      Exception: If brackets have not been closed appropriately
+    """
+
+    open = 0
+    for i in range(len(self.symbols)):
+      symbol = self.symbols[i]
+      if symbol == "(":
+        open += 1
+      elif symbol == ")":
+        open -= 1
+      
+      if open < 0:
+        raise Exception("Close bracket cannot come before an open bracket: '" + str(symbol) + "' at position " + str(i))
+    if open > 0:
+      raise Exception("All open brackets must be closed.")
+
+  def __str__(self):
+    formatted = " ".join(map(str, self.symbols)) # Have to map all symbols to strings before joining
+    formatted = formatted.replace("( ", "(") # Remove spaces after open bracket
+    formatted = formatted.replace(" )", ")") # Remove spaces before closing bracket
+    formatted = formatted.replace(" ^ ", "^") # Remove spaces around exponent
+    return formatted
+
+
+class Postfix:
+  """
+  A class used to represent an equation in Postfix notation
+  
+  Attributes:
+    symbols (list): The equation symbols ordered in Postfix notation
+
+  Methods:
+    convert(infix): Converts an Infix object into a list of symbols ordered in Postfix notation
+    evaluate(): Evaluates the equation
+  """
+
+  def __init__(self, infix):
+    """
+    Parameters:
+      infix (Infix): An Infix object
+    
+    Raises:
+      Exception: If infix is not an Infix object
+    """
+    if isinstance(infix, Infix) == False:
+      raise Exception("Invalid argument. Postfix() must take 1 Infix object argument")
+    self.symbols = self.convert(infix)
+
+  def convert(self, infix):
+    """
+    Converts an Infix object into a list of symbols ordered in Postfix notation
+    
+    Parameters:
+      infix (Infix): An Infix object
+
+    Returns:
+      list: The list of symbols ordered in Postfix notation
+    """
+
+    stack = []
+    output = []
+    # Loop through symbols
+    for symbol in infix.symbols:
+      if isNumber(symbol): # Number
+        output.append(symbol)
+      elif symbol == "(": # Open bracket
+        stack.append(symbol)
+      elif symbol == ")": # Close bracket
+        while stack[-1] != "(": # Pop all items before open bracket from stack to output
+          output.append(stack.pop())
+        stack.pop() # Remove open bracket
+      else: # Operator
+        if(len(stack) > 0): # Proceed if stack is not empty
+          # Pop items with greater or equal precedence before open bracket from stack to output
+          while stack[-1] != "(" and operators.get(stack[-1], 0) >= operators.get(symbol, 0):
+            output.append(stack.pop())
+            if len(stack) == 0: # Break if stack is empty
+              break
+        stack.append(symbol) # Push operator to stack
+
+    while len(stack) > 0: # Pop all remaining items from stack to output
+      output.append(stack.pop())
+    return output
+
+  def evaluate(self):
+    """
+    Evaluates the equation
+
+    Returns:
+      int/float: The answer to the equation
+    """
+
+    stack = []
+    for symbol in self.symbols:
+      if isNumber(symbol): # Number
+        stack.append(symbol)
+      else: # Operator
+        b = stack.pop()
+        a = stack.pop()
+        if symbol == "+":
+          stack.append(a + b)
+        elif symbol == "-":
+          stack.append(a - b)
+        elif symbol == "*":
+          stack.append(a * b)
+        elif symbol == "/":
+          stack.append(a / b)
+        elif symbol == "^":
+          stack.append(a ** b)
+    return formatNumber(stack[0])
+
+  def __str__(self):
+    return " ".join(map(str, self.symbols)) # Have to map all symbols to strings before joining
 
 def printTitle(text, padding):
   """
@@ -25,308 +268,33 @@ def printTitle(text, padding):
   bottom = "\n" + "#" * length # Bottom line of "#"
   print(top + middle + bottom)
 
-class Operand:
-  def __init__(self, value):
-    """
-    Parameters:
-      value (int/float): The operand value
-    """
-
-    if isinstance(value, (int, float)) == False:
-      raise Exception("Operand value must be of type int or float")
-    elif isinstance(value, float):
-      if value.is_integer():
-        value = int(value)
-    self.value = value
-  
-  def __str__(self):
-    return str(self.value)
-
-class Operator:
-  pass
-
-class Add(Operator):
-  def __init__(self):
-    self.precedence = 1
-
-  def __str__(self):
-    return "+"
-
-class Subtract(Operator):
-  def __init__(self):
-    self.precedence = 1
-
-  def __str__(self):
-    return "-"
-
-class Multiply(Operator):
-  def __init__(self):
-    self.precedence = 2
-
-  def __str__(self):
-    return "*"
-
-class Divide(Operator):
-  def __init__(self):
-    self.precedence = 2
-
-  def __str__(self):
-    return "/"
-
-class Exponent(Operator):
-  def __init__(self):
-    self.precedence = 3
-
-  def __str__(self):
-    return "^"
-
-class Bracket:
-  pass
-
-class OpenBracket(Bracket):
-  def __str__(self):
-    return "("
-
-class CloseBracket(Bracket):
-  def __str__(self):
-    return ")"
-
-class Infix:
-  """
-  A class used to represent an equation in Infix notation
-  
-  Attributes:
-    equation (str): The equation string
-    symbols (list): The equation symbols ordered in Infix notation
-
-  Methods:
-    split(): Splits the equation string into a list of symbols ordered in Infix notation
-    isValid(): Determines if the list of symbols is valid Infix notation
-  """
-
-  def __init__(self, equation):
-    """
-    Parameters:
-      equation (str): The equation string
-    """
-
-    self.equation = equation.replace(" ", "")
-    self.symbols = self.split()
-    if self.isValid() == False:
-      raise Exception
-      
-  def split(self):
-    """
-    Splits the equation string into a list of symbols ordered in Infix notation
-    
-    Returns:
-      list: The list of symbols ordered in Infix notation
-    """
-
-    output = []
-    i = 0
-    while i < len(self.equation):
-      char = self.equation[i]
-      if char.isdigit(): # Operand
-        value = char
-        while True:
-          if i == len(self.equation) - 1: # Break loop if last symbol
-            break
-          next = self.equation[i + 1]
-          if next.isdigit() == False and next != ".": # Break loop if next symbol is not a digit or "."
-            break
-          i += 1
-          value += next
-        value = float(value) # Cast to float
-        output.append(Operand(value))
-      elif char == "(":
-        output.append(OpenBracket())
-      elif char == ")":
-        output.append(CloseBracket())
-      elif char == "+":
-        output.append(Add())
-      elif char == "-":
-        output.append(Subtract())
-      elif char == "*":
-        output.append(Multiply())
-      elif char == "/":
-        output.append(Divide())
-      elif char == "^":
-        output.append(Exponent())
-      else:
-        raise Exception("Invalid symbol in equation: " + char)
-      i += 1
-    return output
-
-  def isValid(self):
-    """
-    Determines if the list of symbols is valid Infix notation as below:
-    - Operand must be followed by an Operator or a Bracket. E.g. 2+, 2(, 2)
-    - Operator must be followed by an Operand or an OpenBracket. Cannot be first. E.g. +2, +(
-    - OpenBracket must be followed by an Operand or an OpenBracket. E.g. (2, ((
-    - CloseBracket must be followed by an Operator or a CloseBracket. E.g. )+, ))
-    
-    Returns:
-      bool: True if valid, False otherwise.
-    """
-
-    prev = None
-    if isinstance(self.symbols[0], Operator): # Operator cannot be first
-      return False
-    for symbol in self.symbols:
-      if isinstance(prev, Operand):
-        if isinstance(symbol, Operand):
-          return False
-      elif isinstance(prev, Operator):
-        if isinstance(symbol, (Operator, CloseBracket)):
-          return False
-      elif isinstance(prev, OpenBracket):
-        if isinstance(symbol, (Operator, CloseBracket)):
-          return False
-      elif isinstance(prev, CloseBracket):
-        if isinstance(symbol, (Operand, OpenBracket)):
-          return False
-      prev = symbol
-    return self.hasClosedBrackets() # Brackets must be closed correctly
-
-  def hasClosedBrackets(self):
-    """
-    Determines if all Brackets in the list of symbols have been closed appropriately
-    
-    Returns:
-      bool: True if closed, False otherwise.
-    """
-
-    open = 0
-    for symbol in self.symbols:
-      if isinstance(symbol, OpenBracket):
-        open += 1
-      elif isinstance(symbol, CloseBracket):
-        open -= 1
-      
-      if open < 0: # At any point, there should never be more brackets closed than have been opened
-        return False
-    return open == 0 # At the end, all brackets should be closed
-
-  def __str__(self):
-    formatted = " ".join(map(str, self.symbols)) # Have to map all symbols to strings before joining
-    formatted = formatted.replace("( ", "(") # Remove spaces after open bracket
-    formatted = formatted.replace(" )", ")") # Remove spaces before closing bracket
-    return formatted
-
-
-class Postfix:
-  """
-  A class used to represent an equation in Postfix notation
-  
-  Attributes:
-    symbols (list): The equation symbols ordered in Postfix notation
-
-  Methods:
-    convert(infix): Converts an Infix object into a list of symbols ordered in Postfix notation
-    evaluate(): Evaluates the equation
-  """
-
-  def __init__(self, infix):
-    """
-    Parameters:
-      infix (Infix): An Infix object
-    """
-
-    self.symbols = self.convert(infix)
-
-  def convert(self, infix):
-    """
-    Converts an Infix object into a list of symbols ordered in Postfix notation
-    
-    Parameters:
-      infix (Infix): An Infix object
-
-    Returns:
-      list: The list of symbols ordered in Postfix notation
-    """
-
-    stack = []
-    output = []
-    # Loop through symbols
-    for symbol in infix.symbols:
-      if isinstance(symbol, Operand): # Operand
-        output.append(symbol)
-      elif isinstance(symbol, OpenBracket): # OpenBracket
-        stack.append(symbol)
-      elif isinstance(symbol, CloseBracket): # CloseBracket
-        while isinstance(stack[-1], OpenBracket) == False: # Pop all items before OpenBracket from stack to output
-          output.append(stack.pop())
-        stack.pop() # Remove OpenBracket
-      else: # Operator
-        if(len(stack) > 0): # Proceed if stack is not empty
-          while isinstance(stack[-1], OpenBracket) == False: # Pop items before OpenBracket from stack to output
-            if stack[-1].precedence < symbol.precedence: # Don't pop items with lower precedence
-              break
-            output.append(stack.pop())
-            if len(stack) == 0: # Break if stack is empty
-              break
-        stack.append(symbol) # Push operator to stack
-
-    while len(stack) > 0: # Pop all remaining items from stack to output
-      output.append(stack.pop())
-    return output
-
-  def evaluate(self):
-    """
-    Evaluates the equation
-
-    Returns:
-      int/float: The answer to the equation
-    """
-
-    stack = []
-    for symbol in self.symbols:
-      if isinstance(symbol, Operand): # Operand
-        stack.append(symbol)
-      else: # Operator
-        b = stack.pop().value
-        a = stack.pop().value
-        if isinstance(symbol, Add):
-          stack.append(Operand(a + b))
-        elif isinstance(symbol, Subtract):
-          stack.append(Operand(a - b))
-        elif isinstance(symbol, Multiply):
-          stack.append(Operand(a * b))
-        elif isinstance(symbol, Divide):
-          stack.append(Operand(a / b))
-        elif isinstance(symbol, Exponent):
-          stack.append(Operand(a ** b))
-    return stack[0].value
-
-  def __str__(self):
-    return " ".join(map(str, self.symbols)) # Have to map all symbols to strings before joining
-
 def ask():
-  infix = None
   while True:
-    equation = input("Enter an equation: ")
     try:
+      equation = input("Enter an equation: ")
       infix = Infix(equation)
+      postfix = Postfix(infix)
+      print(infix.__str__() + " = " + str(postfix.evaluate()))
       break
-    except Exception:
-      print("Invalid equation, please try again\n")
-  postfix = Postfix(infix)
-  print(infix.__str__() + " = " + str(postfix.evaluate()))
+    except Exception as e:
+      print(e)
+      print("Please try again\n")
 
 def repeat():
   answer = input("\nWould you like to solve another equation? (y/n) ").lower()
   while answer != "y" and answer != "n":
     print("Please answer with 'y' or 'n'")
     answer = input("\nWould you like to solve another equation? (y/n) ").lower()
+  if answer == "y":
+    print()
   return answer == "y"
 
-# Running the script
-printTitle("Equation Solver", 20)
-while True:
-  ask() # Ask for and solve equation
-  if repeat(): # Ask the user if they want to repeat
-    print("")
-  else:
-    break
-print("Goodbye")
+def main():
+  printTitle("Equation Solver", 20)
+  while True:
+    ask()
+    if repeat() == False:
+      print("Goodbye")
+      break
+
+main()
