@@ -17,6 +17,7 @@ def isNumber(symbol):
 def isOperator(symbol):
   return symbol in operators
 
+
 class Infix:
   """
   A class used to represent an equation in Infix notation
@@ -44,6 +45,7 @@ class Infix:
     try:
       self.symbols = self.split() # Split into symbols
       self.check() # Check for invalid equation
+      self.format() # Format symbols
     except Exception as e:
       raise Exception(e)
       
@@ -74,10 +76,6 @@ class Infix:
           value += next
         value = int(value) if value.isdigit() else float(value) # Cast to int/float
         output.append(value)
-        # Add "*" between number and open bracket
-        if i + 1 < len(self.equation):
-          if self.equation[i + 1] == "(":
-            output.append("*")
       elif isBracket(char) or isOperator(char):
         output.append(char)
       else:
@@ -147,7 +145,20 @@ class Infix:
         raise Exception("Close bracket cannot come before an open bracket: '" + str(symbol) + "' at position " + str(i))
     if open > 0:
       raise Exception("All open brackets must be closed.")
-
+  
+  def format(self):
+    self.formatCoefficients()
+  
+  def formatCoefficients(self):
+    i = 0
+    while i < len(self.symbols):
+      if isNumber(self.symbols[i]): # Symbol at counter is a number
+        if i + 1 < len(self.symbols): # Next symbol exists
+          if self.symbols[i + 1] == "(": # Next symbol is an open bracket
+            self.symbols.insert(i + 1, "*") # Insert "*" between number and open bracket
+            i += 1 # Move counter to open bracket's new index
+      i += 1
+  
   def __str__(self):
     formatted = " ".join(map(str, self.symbols)) # Have to map all symbols to strings before joining
     formatted = formatted.replace("( ", "(") # Remove spaces after open bracket
