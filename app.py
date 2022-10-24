@@ -1,6 +1,6 @@
 # Pseudo code: infix-to-postfix.pdf
 
-operators = {"+": 1, "-": 1, "*": 2, "/": 2, "^": 3}
+operators = {"+": 1, "-": 1, "*": 2, "/": 2, "$": 3, "^": 4}
 
 def formatNumber(number):
   if isinstance(number, float):
@@ -155,7 +155,7 @@ class Infix:
       if isNumber(self.symbols[i]): # Symbol at counter is a number
         if i + 1 < len(self.symbols): # Next symbol exists
           if self.symbols[i + 1] == "(": # Next symbol is an open bracket
-            self.symbols.insert(i + 1, "*") # Insert "*" between number and open bracket
+            self.symbols.insert(i + 1, "$") # Insert "$" between number and open bracket
             i += 1 # Move counter to open bracket's new index
       i += 1
   
@@ -164,6 +164,7 @@ class Infix:
     formatted = formatted.replace("( ", "(") # Remove spaces after open bracket
     formatted = formatted.replace(" )", ")") # Remove spaces before closing bracket
     formatted = formatted.replace(" ^ ", "^") # Remove spaces around exponent
+    formatted = formatted.replace(" $ ", "") # Remove symbol for bracket coefficient
     return formatted
 
 
@@ -250,6 +251,8 @@ class Postfix:
           stack.append(a * b)
         elif symbol == "/":
           stack.append(a / b)
+        elif symbol == "$": # Bracket coefficient
+          stack.append(a * b)
         elif symbol == "^":
           stack.append(a ** b)
     return formatNumber(stack[0])
