@@ -3,19 +3,37 @@
 operators = {"+": 1, "-": 1, "*": 2, "/": 2, "^": 3}
 
 def isBracket(symbol):
+  """Check if the symbol is a bracket."""
   return symbol == "(" or symbol == ")"
 
 def isExpression(symbol):
+  """Check if the symbol is an Expression."""
   return isinstance(symbol, Expression)
 
 def isNumber(symbol):
+  """Check if the symbol is a number."""
   return isinstance(symbol, (int, float))
 
 def isOperator(symbol):
+  """Check if the symbol is an operator."""
   return symbol in operators
 
 class Expression:
+  """
+  A class for an Expression node within a binary expression tree
+  
+  Attributes:
+    left (int/float/Expression): The left side of the Expression
+    right (int/float/Expression): The right side of the Expression
+  """
+
   def __init__(self, left, right):
+    """
+    Parameters:
+      left (int/float/Expression): The left side of the Expression
+      right (int/float/Expression): The right side of the Expression
+    """
+
     self.parent = None
     self.left = left
     self.right = right
@@ -25,12 +43,30 @@ class Expression:
       right.parent = self
 
 class Add(Expression):
-  def __init__(self, left, right):
-      super().__init__(left, right)
-      self.precedence = 1
+  """
+  A class for an addition Expression node. Inherits Expression
   
-  def evaluate(self):
-    answer = (self.left if isNumber(self.left) else self.left.evaluate()) + (self.right if isNumber(self.right) else self.right.evaluate())
+  Attributes:
+    precedence (int): The precedence of the Expression
+
+  Methods:
+    solve(): Solves the Expression
+  """
+
+  def __init__(self, left, right):
+    """
+    Parameters:
+      left (int/float/Expression): The left side of the Expression
+      right (int/float/Expression): The right side of the Expression
+      precedence (int): The precedence of the Expression
+    """
+    
+    super().__init__(left, right)
+    self.precedence = 1
+  
+  def solve(self):
+    """Solves the Expression."""
+    answer = (self.left if isNumber(self.left) else self.left.solve()) + (self.right if isNumber(self.right) else self.right.solve())
     return int(answer) if answer % 1 == 0 else float(answer)
 
   def __str__(self):
@@ -42,12 +78,30 @@ class Add(Expression):
     return "(" + content + ")"
 
 class Subtract(Expression):
-  def __init__(self, left, right):
-      super().__init__(left, right)
-      self.precedence = 1
+  """
+  A class for a subtraction Expression node. Inherits Expression
   
-  def evaluate(self):
-    answer = (self.left if isNumber(self.left) else self.left.evaluate()) - (self.right if isNumber(self.right) else self.right.evaluate())
+  Attributes:
+    precedence (int): The precedence of the Expression
+
+  Methods:
+    solve(): Solves the Expression
+  """
+
+  def __init__(self, left, right):
+    """
+    Parameters:
+      left (int/float/Expression): The left side of the Expression
+      right (int/float/Expression): The right side of the Expression
+      precedence (int): The precedence of the Expression
+    """
+    
+    super().__init__(left, right)
+    self.precedence = 1
+  
+  def solve(self):
+    """Solves the Expression."""
+    answer = (self.left if isNumber(self.left) else self.left.solve()) - (self.right if isNumber(self.right) else self.right.solve())
     return int(answer) if answer % 1 == 0 else float(answer)
 
   def __str__(self):
@@ -59,12 +113,30 @@ class Subtract(Expression):
     return "(" + content + ")"
 
 class Multiply(Expression):
-  def __init__(self, left, right):
-      super().__init__(left, right)
-      self.precedence = 2
+  """
+  A class for a multiplication Expression node. Inherits Expression
   
-  def evaluate(self):
-    answer = (self.left if isNumber(self.left) else self.left.evaluate()) * (self.right if isNumber(self.right) else self.right.evaluate())
+  Attributes:
+    precedence (int): The precedence of the Expression
+
+  Methods:
+    solve(): Solves the Expression
+  """
+
+  def __init__(self, left, right):
+    """
+    Parameters:
+      left (int/float/Expression): The left side of the Expression
+      right (int/float/Expression): The right side of the Expression
+      precedence (int): The precedence of the Expression
+    """
+    
+    super().__init__(left, right)
+    self.precedence = 2
+  
+  def solve(self):
+    """Solves the Expression."""
+    answer = (self.left if isNumber(self.left) else self.left.solve()) * (self.right if isNumber(self.right) else self.right.solve())
     return int(answer) if answer % 1 == 0 else float(answer)
 
   def __str__(self):
@@ -74,12 +146,30 @@ class Multiply(Expression):
     return "(" + content + ")"
 
 class Divide(Expression):
-  def __init__(self, left, right):
-      super().__init__(left, right)
-      self.precedence = 2
+  """
+  A class for a division Expression node. Inherits Expression
   
-  def evaluate(self):
-    answer = (self.left if isNumber(self.left) else self.left.evaluate()) / (self.right if isNumber(self.right) else self.right.evaluate())
+  Attributes:
+    precedence (int): The precedence of the Expression
+
+  Methods:
+    solve(): Solves the Expression
+  """
+
+  def __init__(self, left, right):
+    """
+    Parameters:
+      left (int/float/Expression): The left side of the Expression
+      right (int/float/Expression): The right side of the Expression
+      precedence (int): The precedence of the Expression
+    """
+    
+    super().__init__(left, right)
+    self.precedence = 2
+  
+  def solve(self):
+    """Solves the Expression."""
+    answer = (self.left if isNumber(self.left) else self.left.solve()) / (self.right if isNumber(self.right) else self.right.solve())
     return int(answer) if answer % 1 == 0 else float(answer)
   
   def __str__(self):
@@ -89,12 +179,30 @@ class Divide(Expression):
     return "(" + content + ")"
 
 class Exponent(Expression):
-  def __init__(self, left, right):
-      super().__init__(left, right)
-      self.precedence = 3
+  """
+  A class for an exponent Expression node. Inherits Expression
   
-  def evaluate(self):
-    answer = (self.left if isNumber(self.left) else self.left.evaluate()) ** (self.right if isNumber(self.right) else self.right.evaluate())
+  Attributes:
+    precedence (int): The precedence of the Expression
+
+  Methods:
+    solve(): Solves the Expression
+  """
+
+  def __init__(self, left, right):
+    """
+    Parameters:
+      left (int/float/Expression): The left side of the Expression
+      right (int/float/Expression): The right side of the Expression
+      precedence (int): The precedence of the Expression
+    """
+    
+    super().__init__(left, right)
+    self.precedence = 3
+  
+  def solve(self):
+    """Solves the Expression."""
+    answer = (self.left if isNumber(self.left) else self.left.solve()) ** (self.right if isNumber(self.right) else self.right.solve())
     return int(answer) if answer % 1 == 0 else float(answer)
 
   def __str__(self):
@@ -105,7 +213,7 @@ class Exponent(Expression):
 
 class Infix:
   """
-  A class used to represent an equation in Infix notation
+  A class for representing an equation in Infix notation
   
   Attributes:
     equation (str): The equation string
@@ -115,6 +223,9 @@ class Infix:
     split(): Splits the equation string into a list of symbols ordered in Infix notation
     check(): Check that the list of symbols is valid Infix notation
     checkBrackets(): Check that all brackets in the list of symbols have been closed appropriately
+    isStartOfNumber(char, output): Checks if the given character is the start of a number
+    format(): Formats the list of symbols
+    formatCoefficients(): Formats coefficients within the list of symbols
   """
 
   def __init__(self, equation):
@@ -170,14 +281,6 @@ class Infix:
         raise Exception("Invalid symbol in equation: '" + char + "' at position " + str(i))
       i += 1
     return output
-
-  def isStartOfNumber(self, char, output):
-    if char.isdigit() or char == ".":
-      return True
-    if char == "-":
-      if len(output) > 0:
-        return True if isOperator(output[-1]) else False
-      return True
     
   def check(self):
     """
@@ -241,11 +344,22 @@ class Infix:
         raise Exception("Close bracket cannot come before an open bracket: '" + str(symbol) + "' at position " + str(i))
     if open > 0:
       raise Exception("All open brackets must be closed.")
+
+  def isStartOfNumber(self, char, output):
+    """Checks if the given character is the start of a number."""
+    if char.isdigit() or char == ".":
+      return True
+    if char == "-":
+      if len(output) > 0:
+        return True if isOperator(output[-1]) else False
+      return True
   
   def format(self):
+    """Formats the list of symbols."""
     self.formatCoefficients()
   
   def formatCoefficients(self):
+    """Formats coefficients within the list of symbols."""
     i = 0
     while i < len(self.symbols):
       if isNumber(self.symbols[i]): # Symbol at counter is a number
@@ -257,10 +371,11 @@ class Infix:
 
 class Postfix:
   """
-  A class used to represent an equation in Postfix notation
+  A class for representing an equation in Postfix notation
   
   Attributes:
     symbols (list): The equation symbols ordered in Postfix notation
+    tree (Expression): The root of the expression tree
 
   Methods:
     convert(infix): Converts an Infix object into a list of symbols ordered in Postfix notation
@@ -281,19 +396,9 @@ class Postfix:
     self.tree = self.build()
 
   def convert(self, infix):
-    """
-    Converts an Infix object into a list of symbols ordered in Postfix notation
-    
-    Parameters:
-      infix (Infix): An Infix object
-
-    Returns:
-      list: The list of symbols ordered in Postfix notation
-    """
-
+    """Converts an Infix object into a list of symbols ordered in Postfix notation."""
     stack = []
     output = []
-    # Loop through symbols
     for symbol in infix.symbols:
       if isNumber(symbol): # Number
         output.append(symbol)
@@ -316,12 +421,7 @@ class Postfix:
     return output
 
   def build(self):
-    """
-    Creates a binary expression tree
-
-    Returns:
-      Expression: The root of the tree
-    """
+    """Builds a binary expression tree."""
     stack = []
     for symbol in self.symbols:
       if isNumber(symbol): # Number
@@ -344,55 +444,62 @@ class Postfix:
   def __str__(self):
     return " ".join(map(str, self.symbols)) # Have to map all symbols to strings before joining
 
-def printTitle(text, padding):
+class App:
   """
-  Prints an ASCII title
-  
-  Parameters:
-    text (str): The text for the title
-    padding (int): The width of padding either side of the text
-  
-  Returns:
-    string: The ASCII title
+  A class for an App object
+
+  Methods:
+    printTitle(text, padding): Prints an ASCII title
+    ask(): Ask for and solve an equation
+    repeat(): Check if the user wants to solve another equation
+    run(): Runs the App object
   """
 
-  text = text.strip() # Remove whitespace
-  text = text.upper() # Convert text to upper case
-  middle = " " + text + " " # Add whitespace around text
-  middle = "#" * padding + middle + "#" * padding # Add padding of "#" either side of text
-  length = len(middle) # Get length of one line
-  top = "#" * length + "\n" # Top line of "#"
-  bottom = "\n" + "#" * length # Bottom line of "#"
-  print(top + middle + bottom)
+  def __init__(self):
+    pass
 
-def ask():
-  while True:
-    try:
-      equation = input("Enter an equation: ")
-      infix = Infix(equation)
-      postfix = Postfix(infix)
-      tree = postfix.tree
-      print(str(tree) + " = " + str(tree.evaluate()))
-      break
-    except Exception as e:
-      print(e)
-      print("Please try again\n")
+  def printTitle(self, text, padding):
+    """Prints an ASCII title."""
+    text = text.strip() # Remove whitespace
+    text = text.upper() # Convert text to upper case
+    middle = " " + text + " " # Add whitespace around text
+    middle = "#" * padding + middle + "#" * padding # Add padding of "#" either side of text
+    length = len(middle) # Get length of one line
+    top = "#" * length + "\n" # Top line of "#"
+    bottom = "\n" + "#" * length # Bottom line of "#"
+    print(top + middle + bottom)
 
-def repeat():
-  answer = input("\nWould you like to solve another equation? (y/n) ").lower()
-  while answer != "y" and answer != "n":
-    print("Please answer with 'y' or 'n'")
+  def ask(self):
+    """Ask for and solve an equation."""
+    while True:
+      try:
+        equation = input("Enter an equation: ")
+        postfix = Postfix(Infix(equation))
+        print(str(postfix.tree) + " = " + str(postfix.tree.solve()))
+        break
+      except Exception as e:
+        print(e)
+        print("Please try again\n")
+
+  def repeat(self):
+    """Check if the user wants to solve another equation."""
     answer = input("\nWould you like to solve another equation? (y/n) ").lower()
-  if answer == "y":
-    print()
-  return answer == "y"
+    while answer != "y" and answer != "n":
+      print("Please answer with 'y' or 'n'")
+      answer = input("\nWould you like to solve another equation? (y/n) ").lower()
+    if answer == "y":
+      print()
+    return answer == "y"
 
-def main():
-  printTitle("Equation Solver", 20)
-  while True:
-    ask()
-    if repeat() == False:
-      print("Goodbye")
-      break
+  def run(self):
+    """Run the App object."""
+    self.printTitle("Equation Solver", 20)
+    while True:
+      self.ask()
+      if self.repeat() == False:
+        print("Goodbye")
+        break
 
-main()
+# Run app.py
+app = App()
+app.run()
