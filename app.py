@@ -2,14 +2,11 @@
 
 operators = {"+": 1, "-": 1, "*": 2, "/": 2, "^": 3}
 
-def formatNumber(number):
-  if isinstance(number, float):
-    if number.is_integer():
-      number = int(number)
-  return number
-
 def isBracket(symbol):
   return symbol == "(" or symbol == ")"
+
+def isExpression(symbol):
+  return isinstance(symbol, Expression)
 
 def isNumber(symbol):
   return isinstance(symbol, (int, float))
@@ -17,6 +14,94 @@ def isNumber(symbol):
 def isOperator(symbol):
   return symbol in operators
 
+class Expression:
+  def __init__(self, left, right):
+    self.parent = None
+    self.left = left
+    self.right = right
+    if isExpression(left):
+      left.parent = self
+    if isExpression(right):
+      right.parent = self
+
+class Add(Expression):
+  def __init__(self, left, right):
+      super().__init__(left, right)
+      self.precedence = 1
+  
+  def evaluate(self):
+    answer = (self.left if isNumber(self.left) else self.left.evaluate()) + (self.right if isNumber(self.right) else self.right.evaluate())
+    return int(answer) if answer % 1 == 0 else float(answer)
+
+  def __str__(self):
+    content = str(self.left) + " + " + str(self.right)
+    if self.parent is None:
+      return content
+    if self.parent.precedence == self.precedence:
+      return content
+    return "(" + content + ")"
+
+class Subtract(Expression):
+  def __init__(self, left, right):
+      super().__init__(left, right)
+      self.precedence = 1
+  
+  def evaluate(self):
+    answer = (self.left if isNumber(self.left) else self.left.evaluate()) - (self.right if isNumber(self.right) else self.right.evaluate())
+    return int(answer) if answer % 1 == 0 else float(answer)
+
+  def __str__(self):
+    content = str(self.left) + " - " + str(self.right)
+    if self.parent is None:
+      return content
+    if self.parent.precedence == self.precedence:
+      return content
+    return "(" + content + ")"
+
+class Multiply(Expression):
+  def __init__(self, left, right):
+      super().__init__(left, right)
+      self.precedence = 2
+  
+  def evaluate(self):
+    answer = (self.left if isNumber(self.left) else self.left.evaluate()) * (self.right if isNumber(self.right) else self.right.evaluate())
+    return int(answer) if answer % 1 == 0 else float(answer)
+
+  def __str__(self):
+    content = str(self.left) + " * " + str(self.right)
+    if self.parent is None:
+      return content
+    return "(" + content + ")"
+
+class Divide(Expression):
+  def __init__(self, left, right):
+      super().__init__(left, right)
+      self.precedence = 2
+  
+  def evaluate(self):
+    answer = (self.left if isNumber(self.left) else self.left.evaluate()) / (self.right if isNumber(self.right) else self.right.evaluate())
+    return int(answer) if answer % 1 == 0 else float(answer)
+  
+  def __str__(self):
+    content = str(self.left) + " / " + str(self.right)
+    if self.parent is None:
+      return content
+    return "(" + content + ")"
+
+class Exponent(Expression):
+  def __init__(self, left, right):
+      super().__init__(left, right)
+      self.precedence = 3
+  
+  def evaluate(self):
+    answer = (self.left if isNumber(self.left) else self.left.evaluate()) ** (self.right if isNumber(self.right) else self.right.evaluate())
+    return int(answer) if answer % 1 == 0 else float(answer)
+
+  def __str__(self):
+    content = str(self.left) + "^" + str(self.right)
+    if self.parent is None:
+      return content
+    return "(" + content + ")"
 
 class Infix:
   """
@@ -64,7 +149,7 @@ class Infix:
     i = 0
     while i < len(self.equation):
       char = self.equation[i]
-      if char.isdigit(): # Number
+      if self.isStartOfNumber(char, output): # Number
         value = char
         while True:
           if i == len(self.equation) - 1: # Break loop if last symbol
@@ -74,7 +159,10 @@ class Infix:
             break
           i += 1
           value += next
-        value = int(value) if value.isdigit() else float(value) # Cast to int/float
+        # Cast to int/float
+        value = float(value)
+        if value % 1 == 0:
+          value = int(value)
         output.append(value)
       elif isBracket(char) or isOperator(char):
         output.append(char)
@@ -83,6 +171,14 @@ class Infix:
       i += 1
     return output
 
+  def isStartOfNumber(self, char, output):
+    if char.isdigit() or char == ".":
+      return True
+    if char == "-":
+      if len(output) > 0:
+        return True if isOperator(output[-1]) else False
+      return True
+    
   def check(self):
     """
     Check that the list of symbols is valid Infix notation as below:
@@ -156,16 +252,8 @@ class Infix:
         if i + 1 < len(self.symbols): # Next symbol exists
           if self.symbols[i + 1] == "(": # Next symbol is an open bracket
             self.symbols.insert(i + 1, "*") # Insert "*" between number and open bracket
-            i += 1 # Move counter to open bracket's new index
+            i += 1 # Move counter to "*"
       i += 1
-  
-  def __str__(self):
-    formatted = " ".join(map(str, self.symbols)) # Have to map all symbols to strings before joining
-    formatted = formatted.replace("( ", "(") # Remove spaces after open bracket
-    formatted = formatted.replace(" )", ")") # Remove spaces before closing bracket
-    formatted = formatted.replace(" ^ ", "^") # Remove spaces around exponent
-    return formatted
-
 
 class Postfix:
   """
@@ -176,7 +264,7 @@ class Postfix:
 
   Methods:
     convert(infix): Converts an Infix object into a list of symbols ordered in Postfix notation
-    evaluate(): Evaluates the equation
+    build(): Builds a binary expression tree
   """
 
   def __init__(self, infix):
@@ -190,6 +278,7 @@ class Postfix:
     if isinstance(infix, Infix) == False:
       raise Exception("Invalid argument. Postfix() must take 1 Infix object argument")
     self.symbols = self.convert(infix)
+    self.tree = self.build()
 
   def convert(self, infix):
     """
@@ -222,19 +311,17 @@ class Postfix:
             if len(stack) == 0: # Break if stack is empty
               break
         stack.append(symbol) # Push operator to stack
-
     while len(stack) > 0: # Pop all remaining items from stack to output
       output.append(stack.pop())
     return output
 
-  def evaluate(self):
+  def build(self):
     """
-    Evaluates the equation
+    Creates a binary expression tree
 
     Returns:
-      int/float: The answer to the equation
+      Expression: The root of the tree
     """
-
     stack = []
     for symbol in self.symbols:
       if isNumber(symbol): # Number
@@ -243,16 +330,16 @@ class Postfix:
         b = stack.pop()
         a = stack.pop()
         if symbol == "+":
-          stack.append(a + b)
+          stack.append(Add(a, b))
         elif symbol == "-":
-          stack.append(a - b)
+          stack.append(Subtract(a, b))
         elif symbol == "*":
-          stack.append(a * b)
+          stack.append(Multiply(a, b))
         elif symbol == "/":
-          stack.append(a / b)
+          stack.append(Divide(a, b))
         elif symbol == "^":
-          stack.append(a ** b)
-    return formatNumber(stack[0])
+          stack.append(Exponent(a, b))
+    return stack[0]
 
   def __str__(self):
     return " ".join(map(str, self.symbols)) # Have to map all symbols to strings before joining
@@ -284,7 +371,8 @@ def ask():
       equation = input("Enter an equation: ")
       infix = Infix(equation)
       postfix = Postfix(infix)
-      print(str(infix) + " = " + str(postfix.evaluate()))
+      tree = postfix.tree
+      print(str(tree) + " = " + str(tree.evaluate()))
       break
     except Exception as e:
       print(e)
