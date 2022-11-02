@@ -3,7 +3,6 @@ from tkinter import *
 
 
 OPERATORS = ["+", "-", "*", "/", "^"]
-icons = {"+": "\u002b", "-": "\u2212", "*": "\u00d7", "/": "\u00f7"}
 
 def getOperator(char):
   if char == "+":
@@ -21,9 +20,11 @@ def getOperator(char):
 class Number:
   def __init__(self, number):
     self.values = ["0"] if number is None else list(str(number))
+    if self.values == ["."]:
+      self.values.insert(0, "0")
   
   def push(self, value):
-    if self.values == ["0"]:
+    if self.values == ["0"] and value != ".":
       self.values[0] = value
     elif not self.isMaxLength():
       self.values.append(value)
@@ -340,6 +341,7 @@ class Postfix:
 
 class App:
   def __init__(self):
+    self.ICONS = {"*": "\u00d7", "/": "\u00f7"}
     self.WIDTH = 400
     self.HEIGHT = 600
     self.BUTTON_HEIGHT = 3
@@ -362,7 +364,7 @@ class App:
     for row in range(len(values)):
       for col in range(len(values[0])):
         value = values[row][col]
-        text = icons.get(value) if value in OPERATORS else value
+        text = self.ICONS.get(value, value)
         button = Button(frame, text=text, height=self.BUTTON_HEIGHT, width=self.BUTTON_WIDTH, font=36, relief=FLAT, bd=0, command=lambda value=value: self.press(value)) # Default keyword parameter used: https://stackoverflow.com/questions/17677649/tkinter-assign-button-command-in-a-for-loop-with-lambda
         button.grid(row=row, column=col)
     self.run()
@@ -381,22 +383,6 @@ class App:
         open -= 1
     return open
 
-  def printEquation(self, equals):
-    text = ""
-    for symbol in self.equation:
-      text += str(symbol)
-    if equals:
-      text += "="
-    print(text)
-
-  def printPrevNumber(self):
-    for i in range(len(self.equation) - 1, -1, -1):
-      symbol = self.equation[i]
-      if isinstance(symbol, Number):
-        print(symbol)
-        return
-    raise Exception("No Number found in equation.")
-
   def press(self, command):
     current = self.equation[-1]
     # Number
@@ -412,10 +398,13 @@ class App:
           current.push(command)
     # Decimal
     if command == ".":
-      if type(current) is not Number:
-        current = Number(None)
+      if self.overwrite: #Overwrite Number
+        current = Number(command)
+        self.equation[-1] = current
+      elif type(current) is not Number: #Insert Number
+        current = Number(command)
         self.equation.append(current)
-      if not current.hasDecimal():
+      elif not current.hasDecimal(): #Push to Number
         current.push(command)
     # Operator
     if command in OPERATORS:
@@ -453,18 +442,23 @@ class App:
       self.overwrite = False
       self.printEquation(False)
       self.printPrevNumber()
-  
-  def ask(self):
-    while True:
-      try:
-        equation = input("Enter an equation: ")
-        postfix = Postfix(Infix(equation))
-        print(str(postfix.tree) + " = " + str(postfix.tree.solve()))
-        break
-      except Exception as e:
-        print(e)
-        print("Please try again\n")
 
+  def printEquation(self, equals):
+    text = ""
+    for symbol in self.equation:
+      text += str(symbol)
+    if equals:
+      text += "="
+    print(text)
+
+  def printPrevNumber(self):
+    for i in range(len(self.equation) - 1, -1, -1):
+      symbol = self.equation[i]
+      if isinstance(symbol, Number):
+        print(symbol)
+        return
+    raise Exception("No Number found in equation.")
+    
   def printTitle(self, text, padding):
     text = text.strip() # Remove whitespace
     text = text.upper() # Convert text to upper case
@@ -475,22 +469,8 @@ class App:
     bottom = "\n" + "#" * length # Bottom line of "#"
     print(top + middle + bottom)
 
-  def repeat(self):
-    answer = input("\nWould you like to solve another equation? (y/n) ").lower()
-    while answer != "y" and answer != "n":
-      print("Please answer with 'y' or 'n'")
-      answer = input("\nWould you like to solve another equation? (y/n) ").lower()
-    if answer == "y":
-      print()
-    return answer == "y"
-
   def run(self):
-    self.printTitle("Equation Solver", 20)
-    """while True:
-      self.ask()
-      if self.repeat() == False:
-        print("Goodbye")
-        break"""
+    self.printTitle("calculator", 20)
 
 # Run app.py
 app = App()
