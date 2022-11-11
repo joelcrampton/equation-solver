@@ -1,36 +1,31 @@
 # Pseudo code: infix-to-postfix.pdf
 from tkinter import *
 from brackets import *
+from equation import *
 from infix import *
 from number import *
 from operators import *
 from postfix import *
 from nodes import *
 
+ICONS = {"*": "\u00d7", "/": "\u00f7"}
+
 class App:
   def __init__(self):
-    self.ICONS = {"*": "\u00d7", "/": "\u00f7"}
-    self.WIDTH = 400
-    self.HEIGHT = 600
-    self.BUTTON_HEIGHT = 3
-    self.BUTTON_WIDTH = 7
-
-    self.equation = [Number(None)]
+    self.equation = Equation(None)
     self.equations = []
     self.overwrite = False
 
-    self.window = Tk()
-    self.window.title("Calculator")
-    self.window.geometry(str(self.WIDTH) + "x" + str(self.HEIGHT))
-    self.window.resizable(0, 0)
-    self.history = StringVar()
-    self.input = StringVar()
-    self.input.set(self.getPrevNumberText())
+    window = Tk()
+    window.title("Calculator")
+    window.geometry("400x600")
+    window.resizable(0, 0)
 
-    labelHistory = Label(self.window, textvariable=self.history, font=14, bg="white", fg="black", width = 24, height=2)
-    labelInput = Label(self.window, textvariable=self.input, font=("consolas", 20), bg="white", fg="black", width = 24, height=2)
-    labelHistory.pack()
-    labelInput.pack()
+    self.history = StringVar()
+    self.recent = StringVar()
+    self.recent.set(str(self.equation.getRecent()))
+    Label(window, textvariable=self.history, font=14, bg="white", fg="black", width = 24, height=2).pack()
+    Label(window, textvariable=self.recent, font=("consolas", 20), bg="white", fg="black", width = 24, height=2).pack()
 
     frame = Frame()
     frame.pack()
@@ -40,103 +35,51 @@ class App:
     for row in range(len(values)):
       for col in range(len(values[0])):
         value = values[row][col]
-        text = self.ICONS.get(value, value)
-        button = Button(frame, text=text, height=self.BUTTON_HEIGHT, width=self.BUTTON_WIDTH, font=36, relief=FLAT, bd=0, command=lambda value=value: self.press(value)) # Default keyword parameter used: https://stackoverflow.com/questions/17677649/tkinter-assign-button-command-in-a-for-loop-with-lambda
-        button.grid(row=row+top, column=col)
+        text = ICONS.get(value, value)
+        # Default keyword parameter used: https://stackoverflow.com/questions/17677649/tkinter-assign-button-command-in-a-for-loop-with-lambda
+        Button(frame, text=text, height=3, width=7, font=36, relief=FLAT, bd=0, command=lambda value=value: self.press(value)).grid(row=row+top, column=col)
     self.run()
-    self.window.mainloop()
-
-  def closeBrackets(self):
-    while self.getOpenBrackets() > 0:
-      self.equation.append(CloseBracket())
-  
-  def getOpenBrackets(self):
-    open = 0
-    for symbol in self.equation:
-      if isinstance(symbol, OpenBracket):
-        open += 1
-      elif isinstance(symbol, CloseBracket):
-        open -= 1
-    return open
-  
-  def getEquationText(self, equals):
-    text = ""
-    for symbol in self.equation:
-      text += str(symbol)
-    if equals:
-      text += "="
-    return text
-
-  def getPrevNumberText(self):
-    for i in range(len(self.equation) - 1, -1, -1):
-      symbol = self.equation[i]
-      if isinstance(symbol, Number):
-        return str(symbol)
-    raise Exception("No Number found in equation.")
+    window.mainloop()
 
   def press(self, command):
-    current = self.equation[-1]
-    # Number
-    if command.isdigit():
-      if type(current) is not CloseBracket: # Can't have Number after CloseBracket
+    top = self.equation.top()
+    # Digit or decimal
+    if command.isdigit() or command == ".":
+      if type(top) is not CloseBracket: # Can't have Number after CloseBracket
         if self.overwrite: #Overwrite Number
-          current = Number(command)
-          self.equation[-1] = current
-        elif type(current) is not Number: #Insert Number
-          current = Number(command)
-          self.equation.append(current)
+          self.equation.setTop(Number(command))
+        elif type(top) is not Number: #Insert Number
+          self.equation.append(Number(command))
         else: #Push to Number
-          current.push(command)
-    # Decimal
-    if command == ".":
-      if self.overwrite: #Overwrite Number
-        current = Number(command)
-        self.equation[-1] = current
-      elif type(current) is not Number: #Insert Number
-        current = Number(command)
-        self.equation.append(current)
-      elif not current.hasDecimal(): #Push to Number
-        current.push(command)
+          top.push(command)
     # Operator
     if command in OPERATORS:
-      if isinstance(current, Operator):
-        self.equation[-1] = getOperator(command)
-      else:
+      if isinstance(top, Operator):
+        self.equation.setTop(getOperator(command))
+      elif type(top) is not OpenBracket:
         self.equation.append(getOperator(command))
     # Open bracket
     if command == "(":
       self.equation.append(OpenBracket())
     # Close bracket
     if command == ")":
-      if type(current) is not Operator and self.getOpenBrackets() > 0:
+      if not isinstance(top, (OpenBracket, Operator)) and self.equation.getOpenBrackets() > 0:
         self.equation.append(CloseBracket())
     # CE (Clear Entry)
     if command == "CE":
       self.equation.pop()
-      if not self.equation:
-        self.equation.append(Number(None))
     # Equals
     if command == "=":
-      if type(current) is not Operator:
-        self.closeBrackets()
+      if self.equation.complete():
+        solution = self.equation.solve()
+        self.update()
+        
         self.equations.append(self.equation)
-        # Solve
-        infix = Infix(self.equation)
-        postfix = Postfix(infix)
-        solution = postfix.tree.solve()
-
-        self.equation = [Number(solution)]
-        self.history.set(str(postfix.tree) + " =")
-        self.input.set(solution)
+        self.equation = Equation(solution)
         self.overwrite = True
-        print(str(postfix.tree) + " =")
-        print(solution)
     else:
-      self.history.set(self.getEquationText(False))
-      self.input.set(self.getPrevNumberText())
+      self.update()
       self.overwrite = False
-      print(self.getEquationText(False))
-      print(self.getPrevNumberText())
     
   def printTitle(self, text, padding):
     text = text.strip() # Remove whitespace
@@ -150,6 +93,12 @@ class App:
 
   def run(self):
     self.printTitle("calculator", 20)
+
+  def update(self):
+    self.history.set(str(self.equation))
+    self.recent.set(str(self.equation.getRecent()))
+    print(self.history.get())
+    print(self.recent.get())
 
 # Run app.py
 app = App()

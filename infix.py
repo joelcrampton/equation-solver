@@ -23,8 +23,8 @@ class Infix:
       if isinstance(input, str): # String input
         self.input = input.replace(" ", "")
         self.symbols = self.split() # Split into symbols
-      else: # List input
-        self.symbols = input
+      else: # Equation input
+        self.symbols = input.getSymbols()
       self.check() # Check for invalid equation
       self.format() # Format symbols
     except Exception as e:
@@ -54,8 +54,6 @@ class Infix:
       elif isinstance(prev, CloseBracket):
         if isinstance(symbol, Number):
           raise Exception("Invalid equation. Close bracket cannot be followed by a number: '" + str(symbol) + "' at position " + str(i))
-        elif isinstance(symbol, OpenBracket):
-          raise Exception("Invalid equation. Close bracket cannot be followed by an open bracket: '" + str(symbol) + "' at position " + str(i))
       prev = symbol
     # Check brackets
     try:
@@ -81,13 +79,14 @@ class Infix:
   def format(self):
     self.formatCoefficients()
   
+  # Coefficient is a CloseBracket or a Number before an OpenBracket
   def formatCoefficients(self):
     i = 0
     while i < len(self.symbols):
-      if isinstance(self.symbols[i], Number): # Symbol at counter is a Number
+      if isinstance(self.symbols[i], (CloseBracket, Number)): # Symbol at counter is a CloseBracket or a Number
         if i + 1 < len(self.symbols): # Next symbol exists
           if isinstance(self.symbols[i + 1], OpenBracket): # Next symbol is an OpenBracket
-            self.symbols.insert(i + 1, Multiply()) # Insert Multiply between Number and OpenBracket
+            self.symbols.insert(i + 1, Multiply()) # Insert Multiply between coefficient and OpenBracket
             i += 1 # Move counter to Multiply
       i += 1
 

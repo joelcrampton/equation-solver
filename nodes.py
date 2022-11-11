@@ -12,8 +12,8 @@ class AddNode(Add, ExpressionNode):
   def __init__(self, left, right):
     super().__init__(left, right)
   
-  def solve(self):
-    answer = self.left.solve() + self.right.solve()
+  def evaluate(self):
+    answer = self.left.evaluate() + self.right.evaluate()
     return int(answer) if answer % 1 == 0 else float(answer)
 
   def __str__(self):
@@ -24,8 +24,8 @@ class SubtractNode(Subtract, ExpressionNode):
   def __init__(self, left, right):
     super().__init__(left, right)
   
-  def solve(self):
-    answer = self.left.solve() - self.right.solve()
+  def evaluate(self):
+    answer = self.left.evaluate() - self.right.evaluate()
     return int(answer) if answer % 1 == 0 else float(answer)
 
   def __str__(self):
@@ -36,8 +36,8 @@ class MultiplyNode(Multiply, ExpressionNode):
   def __init__(self, left, right):
     super().__init__(left, right)
   
-  def solve(self):
-    answer = self.left.solve() * self.right.solve()
+  def evaluate(self):
+    answer = self.left.evaluate() * self.right.evaluate()
     return int(answer) if answer % 1 == 0 else float(answer)
 
   def __str__(self):
@@ -48,8 +48,8 @@ class DivideNode(Divide, ExpressionNode):
   def __init__(self, left, right):
     super().__init__(left, right)
   
-  def solve(self):
-    answer = self.left.solve() / self.right.solve()
+  def evaluate(self):
+    answer = self.left.evaluate() / self.right.evaluate()
     return int(answer) if answer % 1 == 0 else float(answer)
   
   def __str__(self):
@@ -60,8 +60,8 @@ class ExponentNode(Exponent, ExpressionNode):
   def __init__(self, left, right):
     super().__init__(left, right)
   
-  def solve(self):
-    answer = self.left.solve() ** self.right.solve()
+  def evaluate(self):
+    answer = self.left.evaluate() ** self.right.evaluate()
     return int(answer) if answer % 1 == 0 else float(answer)
 
   def __str__(self):
@@ -73,7 +73,7 @@ class NumberNode:
     self.parent = None
     self.value = value
   
-  def solve(self):
+  def evaluate(self):
     return self.value
   
   def __str__(self):
