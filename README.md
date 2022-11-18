@@ -1,4 +1,4 @@
-# Equation solver
+# Calculator
 Python script that solves equations using the __infix__ to __postfix__ algorithm
 - Takes a string equation in infix format
 - Converts to postfix format
