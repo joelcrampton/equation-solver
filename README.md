@@ -1,6 +1,6 @@
 # Infix to Postfix
 Python script that uses an infix to postfix algorithm to evaluate equations
-- Takes a string equation in infix notation
+- Takes an equation string in infix notation
 - Converts to a postfix tree
 - Evaluates the postfix tree to solve the equation
 
